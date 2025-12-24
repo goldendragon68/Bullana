@@ -1,0 +1,45 @@
+body {
+  background-color: #04101C !important;
+  /* background: 200px / 200px url("assets/image/bg.svg"),
+    linear-gradient(-45deg, #12181b, #151d22); */
+  /* background-image: repeating-linear-gradient(
+      45deg,
+      #0002 0em,
+      #0002 2.5em,
+      transparent 2.5em,
+      transparent 5em
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      #0002 0em,
+      #0002 2.5em,
+      transparent 2.5em,
+      transparent 5em
+    ); */
+  color: white !important;
+  margin: 0;
+  font-family: "Montserrat";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+::-webkit-scrollbar {
+  width: 3px;
+  height: 3px;
+  -webkit-background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #fff3;
+  border-radius: 100px;
+  -webkit-background-clip: content-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}

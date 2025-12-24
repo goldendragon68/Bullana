@@ -1,0 +1,21 @@
+{
+  "name": "bullana-app",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "admin"
+  ],
+  "dependencies": {
+    "first": "^0.0.3",
+    "ofc": "^0.0.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^18.1.2",
+    "concurrently": "^9.1.2"
+  },
+  "scripts": {
+    "db:seed": "node ./backend/seed.js",
+    "dev": "concurrently \"npm:start --workspace backend\" \"npm:start --workspace frontend\" \"npm:start --workspace admin\""
+  }
+}

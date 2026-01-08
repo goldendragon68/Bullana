@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bullana Authentication Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; margin: 5px; width: 200px; border: 1px solid #ddd; border-radius: 3px; }
+        .result { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 3px; font-family: monospace; }
+        .success { border-left: 4px solid #28a745; }
+        .error { border-left: 4px solid #dc3545; }
+    </style>
+</head>
+<body>
+    <h1>🎯 Bullana Authentication Tester</h1>
+    
+    <div class="test-section">
+        <h3>👤 User Authentication Test</h3>
+        <input type="email" id="userEmail" placeholder="User Email" value="test@example.com">
+        <input type="password" id="userPassword" placeholder="Password" value="password123">
+        <br>
+        <button onclick="testUserLogin()">Test User Login</button>
+        <button onclick="testUserProfile()">Test Get Profile</button>
+        <button onclick="testUserLogout()">Test Logout</button>
+        <div id="userResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>👑 Admin Authentication Test</h3>
+        <input type="email" id="adminEmail" placeholder="Admin Email" value="admin@bullana.com">
+        <input type="password" id="adminPassword" placeholder="Password" value="admin123">
+        <input type="text" id="adminPattern" placeholder="Pattern" value="test-pattern">
+        <br>
+        <button onclick="testAdminLogin()">Test Admin Login</button>
+        <button onclick="testAdminProfile()">Test Get Admin Profile</button>
+        <button onclick="testAdminLogout()">Test Admin Logout</button>
+        <div id="adminResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔒 Token Validation Test</h3>
+        <button onclick="validateUserToken()">Validate User Token</button>
+        <button onclick="validateAdminToken()">Validate Admin Token</button>
+        <button onclick="clearAllTokens()">Clear All Tokens</button>
+        <div id="tokenResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:13578';
+        let userToken = localStorage.getItem('bullana_token');
+        let adminToken = localStorage.getItem('bullana_admin_token');
+
+        // User Authentication Tests
+        async function testUserLogin() {
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/basic/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.token) {
+                    userToken = result.token;
+                    localStorage.setItem('bullana_token', userToken);
+                    showResult('userResult', '✅ User Login Successful!', result, true);
+                } else {
+                    showResult('userResult', '❌ User Login Failed', result, false);
+                }
+            } catch (error) {
+                showResult('userResult', '❌ Network Error', error.message, false);
+            }
+        }
+
+        async function testUserProfile() {
+            if (!userToken) {
+                showResult('userResult', '❌ No user token found. Login first.', {}, false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                
+                const result = await response.json();
+                showResult('userResult', '✅ User Profile Retrieved', result, true);
+            } catch (error) {
+                showResult('userResult', '❌ Profile Fetch Error', error.message, false);
+            }
+        }
+
+        async function testUserLogout() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                
+                localStorage.removeItem('bullana_token');
+                userToken = null;
+                showResult('userResult', '✅ User Logged Out', {}, true);
+            } catch (error) {
+                showResult('userResult', '❌ Logout Error', error.message, false);
+            }
+        }
+
+        // Admin Authentication Tests
+        async function testAdminLogin() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const pattern = document.getElementById('adminPattern').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/admin/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, pattern })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.token) {
+                    adminToken = result.token;
+                    localStorage.setItem('bullana_admin_token', adminToken);
+                    showResult('adminResult', '✅ Admin Login Successful!', result, true);
+                } else {
+                    showResult('adminResult', '❌ Admin Login Failed', result, false);
+                }
+            } catch (error) {
+                showResult('adminResult', '❌ Network Error', error.message, false);
+            }
+        }
+
+        async function testAdminProfile() {
+            if (!adminToken) {
+                showResult('adminResult', '❌ No admin token found. Login first.', {}, false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/auth/profile`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const result = await response.json();
+                showResult('adminResult', '✅ Admin Profile Retrieved', result, true);
+            } catch (error) {
+                showResult('adminResult', '❌ Profile Fetch Error', error.message, false);
+            }
+        }
+
+        async function testAdminLogout() {
+            try {
+                const response = await fetch(`${API_BASE}/admin/auth/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                localStorage.removeItem('bullana_admin_token');
+                adminToken = null;
+                showResult('adminResult', '✅ Admin Logged Out', {}, true);
+            } catch (error) {
+                showResult('adminResult', '❌ Logout Error', error.message, false);
+            }
+        }
+
+        // Token Validation
+        async function validateUserToken() {
+            if (!userToken) {
+                showResult('tokenResult', '❌ No user token to validate', {}, false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/validate`, {
+                    headers: { 'Authorization': `Bearer ${userToken}` }
+                });
+                
+                const result = await response.json();
+                showResult('tokenResult', result.valid ? '✅ User Token Valid' : '❌ User Token Invalid', result, result.valid);
+            } catch (error) {
+                showResult('tokenResult', '❌ Token Validation Error', error.message, false);
+            }
+        }
+
+        async function validateAdminToken() {
+            if (!adminToken) {
+                showResult('tokenResult', '❌ No admin token to validate', {}, false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/auth/validate`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+                
+                const result = await response.json();
+                showResult('tokenResult', result.valid ? '✅ Admin Token Valid' : '❌ Admin Token Invalid', result, result.valid);
+            } catch (error) {
+                showResult('tokenResult', '❌ Token Validation Error', error.message, false);
+            }
+        }
+
+        function clearAllTokens() {
+            localStorage.removeItem('bullana_token');
+            localStorage.removeItem('bullana_admin_token');
+            userToken = null;
+            adminToken = null;
+            showResult('tokenResult', '✅ All tokens cleared', {}, true);
+        }
+
+        // Helper function to display results
+        function showResult(elementId, message, data, success) {
+            const element = document.getElementById(elementId);
+            element.className = `result ${success ? 'success' : 'error'}`;
+            element.innerHTML = `
+                <strong>${message}</strong>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+
+        // Load existing tokens on page load
+        window.onload = function() {
+            userToken = localStorage.getItem('bullana_token');
+            adminToken = localStorage.getItem('bullana_admin_token');
+            
+            if (userToken) showResult('userResult', '📝 User token found in localStorage', { token: userToken.substring(0, 20) + '...' }, true);
+            if (adminToken) showResult('adminResult', '📝 Admin token found in localStorage', { token: adminToken.substring(0, 20) + '...' }, true);
+        };
+    </script>
+</body>
+</html>
